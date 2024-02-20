@@ -1,5 +1,5 @@
 Name:           targetcli
-Version:        0.0.4
+Version:        2.2.1
 Release:        %autorelease
 Summary:        A command shell for managing the Linux LIO kernel target
 
