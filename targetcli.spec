@@ -1,17 +1,19 @@
 Name:           targetcli
-Version:        2.2.1
-Release:        %autorelease
+Version:        2.2.0
+Release:        1
 Summary:        A command shell for managing the Linux LIO kernel target
 
 License:        Apache-2.0
 URL:            http://github.com/open-iscsi/targetcli-fb
-Source:         %{pypi_source targetcli-fb}
+Source:         %{pypi_source targetcli}
 
 BuildArch:      noarch
 BuildRequires:  python3-devel
 BuildRequires:  python3-rtslib
 BuildRequires:  python3-configshell
-
+Requires:       target-restore
+Requires:       python3-gobject-base
+Requires:       python3-dbus
 
 %global _description %{expand:
 An administration shell for configuring iSCSI, FCoE, and other
@@ -23,12 +25,11 @@ users will also need to install and use fcoe-utils.}
 
 
 %prep
-%autosetup -p1 -n targetcli-fb-%{version}
+%autosetup -p1 -n targetcli-%{version}
 
 
 %generate_buildrequires
-# pyproject_buildrequires macro needs configshell and rtslib to include Provides "rtslib-fb" / "configshell-fb"
-
+%pyproject_buildrequires
 
 %build
 %pyproject_wheel
