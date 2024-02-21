@@ -11,6 +11,7 @@ BuildArch:      noarch
 BuildRequires:  python3-devel
 BuildRequires:  python3-rtslib
 BuildRequires:  python3-configshell
+BuildRequires:  systemd-rpm-macros
 Requires:       target-restore
 Requires:       python3-gobject-base
 Requires:       python3-dbus
@@ -61,4 +62,5 @@ install -m 644 systemd/* %{buildroot}%{_unitdir}/
 
 
 %changelog
-%autochangelog
+* Wed Feb 21 2024 Martin Hoyer <mhoyer@redhat.com> - 2.2.0-1
+- Using flit build backend for RHEL 9 compatibility
