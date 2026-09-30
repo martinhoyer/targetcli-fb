@@ -23,3 +23,6 @@ venv/
 .idea
 *egg-info/
 targetcli/version.py
+
+# Fetched from Fedora dist-git by Packit
+/targetcli.spec
