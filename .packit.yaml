@@ -1,44 +1,41 @@
 ---
-# Basic configuration for Packit
+# Packit is used for upstream CI only: Copr builds and tmt tests of pull
+# requests.
+#
+# The spec file is maintained in Fedora dist-git, together with the Packit
+# jobs (pull_from_upstream, koji_build, bodhi_update) that bring new releases
+# into Fedora: https://src.fedoraproject.org/rpms/targetcli
+#
 # See documentation: https://packit.dev/docs/configuration/
 
-specfile_path: python-targetcli-fb.spec
+specfile_path: targetcli.spec
+upstream_package_name: targetcli
+downstream_package_name: targetcli
+upstream_tag_template: v{version}
 
-upstream_package_name: targetcli-fb
-# In Fedora, Python packages are prefixed with 'python-'
-downstream_package_name: python3-targetcli
-
-# Use hatch to create the source archive
 actions:
+  post-upstream-clone:
+    # Build with the spec file Fedora actually uses
+    - curl -fsSLO https://src.fedoraproject.org/rpms/targetcli/raw/rawhide/f/targetcli.spec
   create-archive:
     - hatch build -t sdist
     - bash -c "ls -1t ./dist/*.tar.gz | head -n 1"
 
 srpm_build_deps:
-  - python3-devel
-  - python3-pip
+  - curl
   - hatch
   - python3-hatchling
   - python3-hatch-vcs
 
 jobs:
-  # Test PRs in COPR
   - job: copr_build
     trigger: pull_request
     targets:
-      - fedora-latest-stable
-      - epel-9
+      - fedora-all
+      - epel-10
 
-  # Run tests
   - job: tests
     trigger: pull_request
     targets:
       - fedora-latest-stable
-      - epel-9
-
-  # Sync with Fedora when a new release is created
-  - job: propose_downstream
-    trigger: release
-    dist_git_branches:
-      - fedora-all
-      - epel-9
+      - epel-10
