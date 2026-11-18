@@ -17,8 +17,8 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
-    "configshell-fb",
-    "rtslib-fb",
+    "configshell",
+    "rtslib",
 ]
 dynamic = ["version"]
 

@@ -27,15 +27,16 @@ srpm_build_deps:
   - python3-hatchling
   - python3-hatch-vcs
 
+# There is no EPEL 10 target: CentOS Stream 10 ships rtslib 2.1 and
+# configshell 1.1, which do not provide the "rtslib" and "configshell"
+# distributions that targetcli depends on.
 jobs:
   - job: copr_build
     trigger: pull_request
     targets:
       - fedora-all
-      - epel-10
 
   - job: tests
     trigger: pull_request
     targets:
       - fedora-latest-stable
-      - epel-10

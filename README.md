@@ -43,4 +43,12 @@ Formerly targetcli-fb
 ---------------------
 This project was previously known as targetcli-fb ("free branch"), a fork of
 the original "targetcli" code written by RisingTide Systems. The fork has long
-been the only maintained version, so the `-fb` suffix has been dropped.
+been the only maintained version, so the `-fb` suffix has been dropped. Its
+libraries are now published on PyPI as `rtslib` and `configshell`
+(formerly `rtslib-fb` and `configshell-fb`).
+
+If you are upgrading an existing pip installation, uninstall the old
+distributions first, since the old and the new ones install the same files:
+
+    pip uninstall targetcli-fb rtslib-fb configshell-fb
+    pip install --upgrade targetcli
