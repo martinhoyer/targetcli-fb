@@ -37,6 +37,7 @@ from rtslib import (
     RTSRoot,
     UserBackedStorageObject,
 )
+from rtslib.tcm import StorageObject
 from rtslib.utils import get_block_type
 
 from .ui_node import UINode, UIRTSLibNode
@@ -348,6 +349,21 @@ class UIBackstore(UINode):
                 raise ExecutionError("'export_backstore_name_as_model' is set but"
                                      " emulate_model_alias\n  not supported by kernel.")
 
+    def vendor_id_kwargs(self, vendor_id):
+        '''
+        Returns the keyword arguments needed to pass "vendor_id" to an
+        rtslib StorageObject constructor. Nothing is passed when it is
+        unset, so creating backstores keeps working with rtslib versions
+        that do not support setting the T10 Vendor ID.
+        '''
+        vendor_id = self.ui_eval_param(vendor_id, 'string', None)
+        if vendor_id is None:
+            return {}
+        if not hasattr(StorageObject, 'vendor_id'):
+            raise ExecutionError("Setting vendor_id is not supported by the"
+                                 " installed rtslib version.")
+        return {'vendor_id': vendor_id}
+
 
 class UIPSCSIBackstore(UIBackstore):
     '''
@@ -390,6 +406,10 @@ class UIRDMCPBackstore(UIBackstore):
         '''
         Creates an RDMCP storage object. "size" is the size of the ramdisk.
 
+        The optional "vendor_id" parameter sets the T10 Vendor
+        Identification reported in the SCSI INQUIRY data (up to 8 ASCII
+        characters). If omitted, the kernel default "LIO-ORG" is used.
+
         SIZE SYNTAX
         ===========
         - If size is an int, it represents a number of bytes.
@@ -404,10 +424,10 @@ class UIRDMCPBackstore(UIBackstore):
 
         nullio = self.ui_eval_param(nullio, 'bool', False)
         wwn = self.ui_eval_param(wwn, 'string', None)
-        vendor_id = self.ui_eval_param(vendor_id, 'string', None)
+        vendor_id_kwargs = self.vendor_id_kwargs(vendor_id)
 
         so = RDMCPStorageObject(name, human_to_bytes(size), nullio=nullio, wwn=wwn,
-                                vendor_id=vendor_id)
+                                **vendor_id_kwargs)
         ui_so = UIRamdiskStorageObject(so, self)
         self.setup_model_alias(so)
         self.shell.log.info(f"Created ramdisk {name} with size {size}.")
@@ -463,6 +483,10 @@ class UIFileIOBackstore(UIBackstore):
         boolean stating if the created file should be created as a
         sparse file (the default), or fully initialized.
 
+        The optional "vendor_id" parameter sets the T10 Vendor
+        Identification reported in the SCSI INQUIRY data (up to 8 ASCII
+        characters). If omitted, the kernel default "LIO-ORG" is used.
+
         SIZE SYNTAX
         ===========
         - If size is an int, it represents a number of bytes.
@@ -478,7 +502,7 @@ class UIFileIOBackstore(UIBackstore):
         sparse = self.ui_eval_param(sparse, 'bool', True)
         write_back = self.ui_eval_param(write_back, 'bool', True)
         wwn = self.ui_eval_param(wwn, 'string', None)
-        vendor_id = self.ui_eval_param(vendor_id, 'string', None)
+        vendor_id_kwargs = self.vendor_id_kwargs(vendor_id)
 
         self.shell.log.debug(f"Using params size={size} write_back={write_back} sparse={sparse}")
 
@@ -512,7 +536,7 @@ class UIFileIOBackstore(UIBackstore):
 
         so = FileIOStorageObject(name, file_or_dev, size,
                                  write_back=write_back, wwn=wwn,
-                                 vendor_id=vendor_id)
+                                 **vendor_id_kwargs)
         ui_so = UIFileioStorageObject(so, self)
         self.setup_model_alias(so)
         self.shell.log.info(f"Created fileio {name} with size {so.size}")
@@ -562,6 +586,10 @@ class UIBlockBackstore(UIBackstore):
         '''
         Creates an Block Storage object. "dev" is the path to the TYPE_DISK
         block device to use.
+
+        The optional "vendor_id" parameter sets the T10 Vendor
+        Identification reported in the SCSI INQUIRY data (up to 8 ASCII
+        characters). If omitted, the kernel default "LIO-ORG" is used.
         '''
         self.assert_root()
 
@@ -569,13 +597,13 @@ class UIBlockBackstore(UIBackstore):
         readonly = self._ui_block_ro_check(dev) if ro_string is None else self.ui_eval_param(readonly, "bool", False)
 
         wwn = self.ui_eval_param(wwn, 'string', None)
-        vendor_id = self.ui_eval_param(vendor_id, 'string', None)
+        vendor_id_kwargs = self.vendor_id_kwargs(vendor_id)
 
         excl_string = self.ui_eval_param(exclusive, 'string', None)
         exclusive = True if excl_string is None else self.ui_eval_param(exclusive, "bool", True)
 
         so = BlockStorageObject(name, dev, readonly=readonly, wwn=wwn,
-                                exclusive=exclusive, vendor_id=vendor_id)
+                                exclusive=exclusive, **vendor_id_kwargs)
         ui_so = UIBlockStorageObject(so, self)
         self.setup_model_alias(so)
         self.shell.log.info(f"Created block storage object {name} using {dev}.")
@@ -627,6 +655,10 @@ class UIUserBackedBackstore(UIBackstore):
         '''
         Creates a User-backed storage object.
 
+        The optional "vendor_id" parameter sets the T10 Vendor
+        Identification reported in the SCSI INQUIRY data (up to 8 ASCII
+        characters). If omitted, the kernel default "LIO-ORG" is used.
+
         SIZE SYNTAX
         ===========
         - If size is an int, it represents a number of bytes.
@@ -640,7 +672,7 @@ class UIUserBackedBackstore(UIBackstore):
 
         size = human_to_bytes(size)
         wwn = self.ui_eval_param(wwn, 'string', None)
-        vendor_id = self.ui_eval_param(vendor_id, 'string', None)
+        vendor_id_kwargs = self.vendor_id_kwargs(vendor_id)
 
         config = self.handler + "/" + cfgstring
 
@@ -651,7 +683,7 @@ class UIUserBackedBackstore(UIBackstore):
         try:
             so = UserBackedStorageObject(name, size=size, config=config,
                                          wwn=wwn, hw_max_sectors=hw_max_sectors,
-                                         control=control, vendor_id=vendor_id)
+                                         control=control, **vendor_id_kwargs)
         except:
             raise ExecutionError("UserBackedStorageObject creation failed.")
 
